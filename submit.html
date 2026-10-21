@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit a Rumour — The League Report</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="masthead-rule-top"></div>
+      <div class="masthead-inner">
+        <a href="index.html" class="masthead-title">The League Report</a>
+        <div class="masthead-sub">KKUPFL - T6 Clouston &middot; League Intel</div>
+      </div>
+      <div class="masthead-rule-bottom"></div>
+      <nav class="nav">
+        <a href="index.html" class="active">Home</a>
+        <a href="weeks/week-03.html">Wk 3</a>
+      </nav>
+      <div class="submit-link"><a href="submit.html">Submit a Rumour &rarr;</a></div>
+    </header>
+    <main class="main">
+      
+    <div class="article-header">
+      <div class="kicker">League Intel</div>
+      <h1>Submit a Rumour</h1>
+    </div>
+    <div class="rumour-box">
+      <p class="rumour-intro">Heard whispers about a trade? Know which manager is shopping a player? Drop a tip for our insider.</p>
+      <form id="rumour-form" class="rumour-form">
+        <div>
+          <label for="rumour-text">Your tip</label>
+          <textarea id="rumour-text" name="text" rows="5" maxlength="1000" placeholder="e.g., Connor Bedard is on the trade block. His manager is looking for help on defence..." required></textarea>
+        </div>
+        <div class="rumour-field">
+          <label for="rumour-source">Your name or alias (optional)</label>
+          <input type="text" id="rumour-source" name="source" placeholder="Anonymous" maxlength="50">
+        </div>
+        <div class="rumour-actions">
+          <button type="submit" id="rumour-submit">Submit Tip</button>
+          <div id="rumour-status" class="rumour-status"></div>
+        </div>
+      </form>
+    </div>
+    <script>
+    (function() {
+      var API = "https://trade-rumours.dads-league.workers.dev/api/rumours";
+      var LEAGUE = "kkupfl";
+      var form = document.getElementById('rumour-form');
+      var btn = document.getElementById('rumour-submit');
+      var status = document.getElementById('rumour-status');
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var text = document.getElementById('rumour-text').value.trim();
+        var source = document.getElementById('rumour-source').value.trim();
+        if (!text) return;
+
+        btn.disabled = true;
+        status.textContent = 'Submitting...';
+        status.className = 'rumour-status';
+
+        fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text, source: source || undefined, league: LEAGUE })
+        })
+        .then(function(res) {
+          if (!res.ok) return res.text().then(function(t) {
+            try { var d = JSON.parse(t); throw new Error(d.error || 'Submission failed'); }
+            catch(e) { if (e instanceof SyntaxError) throw new Error('Submission failed'); throw e; }
+          });
+          return res.json();
+        })
+        .then(function() {
+          status.textContent = 'Tip received. Our insider will look into it.';
+          status.className = 'rumour-status success';
+          document.getElementById('rumour-text').value = '';
+          document.getElementById('rumour-source').value = '';
+        })
+        .catch(function(err) {
+          status.textContent = err.message || 'Something went wrong. Try again.';
+          status.className = 'rumour-status error';
+        })
+        .finally(function() {
+          btn.disabled = false;
+        });
+      });
+    })();
+    </script>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-rule"></div>
+      <p>The League Report &middot; KKUPFL - T6 Clouston &middot; 2026 Season</p>
+    </footer>
+  </div>
+</body>
+</html>
